@@ -5,9 +5,9 @@ const nextConfig = {
   images: {
     unoptimized: true
   },
-  // 配置基础路径，如果部署到子路径需要设置
-  // basePath: '/csharp-learning-path',
-  // assetPrefix: '/csharp-learning-path',
+  // GitHub Pages 部署到子路径需要配置
+  basePath: '/csharp-learning-path',
+  assetPrefix: '/csharp-learning-path',
 }
 
 module.exports = nextConfig
