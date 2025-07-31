@@ -76,6 +76,27 @@ export default function Hero() {
               <Laptop className="w-4 h-4" />
             </a>
             <a 
+              href="/examples"
+              className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-4 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
+            >
+              代码示例
+              <Code className="w-4 h-4" />
+            </a>
+            <a 
+              href="/resources"
+              className="bg-orange-600 hover:bg-orange-700 text-white px-8 py-4 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
+            >
+              学习资源
+              <BookOpen className="w-4 h-4" />
+            </a>
+            <a 
+              href="/projects"
+              className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
+            >
+              项目展示
+              <Code className="w-4 h-4" />
+            </a>
+            <a 
               href="#table-of-contents"
               className="border border-secondary-300 hover:border-secondary-400 text-secondary-700 px-8 py-4 rounded-lg font-medium transition-colors"
             >
