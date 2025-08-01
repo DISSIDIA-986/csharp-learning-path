@@ -35,15 +35,9 @@ export default function Footer() {
                   </a>
                 </li>
                 <li>
-                              <a href="/examples" className="text-secondary-600 hover:text-primary-600 transition-colors">
-              代码示例库
-            </a>
-            <a href="/resources" className="text-secondary-600 hover:text-primary-600 transition-colors">
-              学习资源库
-            </a>
-            <a href="/projects" className="text-secondary-600 hover:text-primary-600 transition-colors">
-              项目展示
-            </a>
+                  <a href="/examples" className="text-secondary-300 hover:text-white transition-colors">
+                    代码示例库
+                  </a>
                 </li>
                 <li>
                   <a href="/troubleshooting" className="text-secondary-300 hover:text-white transition-colors">

@@ -1199,7 +1199,7 @@ interface ContentSectionProps {
 
 function ContentSection({ section, isExpanded, onToggle }: ContentSectionProps) {
   return (
-    <div className="border border-secondary-200 rounded-lg overflow-hidden mb-6">
+    <div id={section.id} className="border border-secondary-200 rounded-lg overflow-hidden mb-6">
       <button
         onClick={onToggle}
         className="w-full p-6 text-left hover:bg-secondary-50 transition-colors flex items-center justify-between"

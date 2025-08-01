@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import { Copy, Check, Code2 } from 'lucide-react'
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
+import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism'
 
 interface CodeExample {
   id: string
@@ -469,11 +471,20 @@ export default function CodeExamples() {
 
             {/* 代码区域 */}
             <div className="relative">
-              <pre className="bg-secondary-900 text-secondary-100 p-6 overflow-x-auto">
-                <code className="font-mono text-sm leading-relaxed">
-                  {example.code}
-                </code>
-              </pre>
+              <SyntaxHighlighter
+                language={example.language === 'csharp' ? 'csharp' : example.language}
+                style={oneDark}
+                customStyle={{
+                  margin: 0,
+                  borderRadius: '0.5rem',
+                  fontSize: '0.875rem',
+                  lineHeight: '1.5'
+                }}
+                showLineNumbers={true}
+                wrapLines={true}
+              >
+                {example.code}
+              </SyntaxHighlighter>
             </div>
           </div>
         ))}
