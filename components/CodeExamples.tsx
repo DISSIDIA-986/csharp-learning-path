@@ -2,15 +2,16 @@
 
 import { useState } from 'react'
 import { Copy, Check, Code2 } from 'lucide-react'
+import ReactMarkdown from 'react-markdown'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism'
+import remarkGfm from 'remark-gfm'
 
 interface CodeExample {
   id: string
   title: string
   description: string
-  language: string
-  code: string
+  content: string
   category: 'csharp' | 'java' | 'comparison'
 }
 
@@ -19,9 +20,10 @@ const codeExamples: CodeExample[] = [
     id: 'properties-comparison',
     title: 'Properties vs Getters/Setters',
     description: 'C# 属性与 Java getters/setters 的对比',
-    language: 'csharp',
     category: 'comparison',
-    code: `// Java 风格
+    content: `## Java 风格
+
+\`\`\`java
 public class JavaDevice {
     private String name;
     private boolean active;
@@ -32,8 +34,11 @@ public class JavaDevice {
     public boolean isActive() { return active; }
     public void setActive(boolean active) { this.active = active; }
 }
+\`\`\`
 
-// C# 风格
+## C# 风格
+
+\`\`\`csharp
 public class CSharpDevice 
 {
     public string Name { get; set; } = string.Empty;
@@ -49,61 +54,74 @@ public class CSharpDevice
         get => _id;
         set => _id = value > 0 ? value : throw new ArgumentException("ID必须大于0");
     }
-}`
+}
+\`\`\`
+
+**主要差异:**
+- C# 属性语法更简洁
+- 支持自动实现的属性 \`{ get; set; }\`
+- 支持计算属性（只读）
+- 支持初始化器`
   },
   {
     id: 'linq-vs-streams',
     title: 'LINQ vs Java Streams',
     description: '数据查询操作的对比',
-    language: 'csharp',
     category: 'comparison',
-    code: `// Java Streams
+    content: `## Java Streams
+
+\`\`\`java
 List<Device> activeDevices = devices.stream()
     .filter(d -> d.isActive())
     .sorted(Comparator.comparing(Device::getName))
     .collect(Collectors.toList());
+\`\`\`
 
-Map<String, Long> devicesByLocation = devices.stream()
-    .collect(Collectors.groupingBy(
-        Device::getLocation, 
-        Collectors.counting()));
+## C# LINQ - 方法语法
 
-// C# LINQ - 方法语法
+\`\`\`csharp
 var activeDevices = devices
     .Where(d => d.IsActive)
     .OrderBy(d => d.Name)
     .ToList();
+\`\`\`
 
-var devicesByLocation = devices
-    .GroupBy(d => d.Location)
-    .ToDictionary(g => g.Key, g => g.Count());
+## C# LINQ - 查询语法
 
-// C# LINQ - 查询语法 (类似 SQL)
+\`\`\`csharp
 var activeDevices = from d in devices
                    where d.IsActive
                    orderby d.Name
-                   select d;`
+                   select d;
+\`\`\`
+
+**优势对比:**
+- LINQ 提供两种语法：方法语法和查询语法
+- 查询语法更接近 SQL，易于理解
+- 方法语法更函数式，可以链式调用`
   },
   {
     id: 'async-comparison',
     title: '异步编程对比',
     description: 'Java CompletableFuture vs C# async/await',
-    language: 'csharp',
     category: 'comparison',
-    code: `// Java CompletableFuture
+    content: `## Java CompletableFuture
+
+\`\`\`java
 public CompletableFuture<Device> getDeviceAsync(int id) {
     return CompletableFuture.supplyAsync(() -> {
         return deviceRepository.findById(id);
-    }).thenCompose(device -> {
-        if (device.isPresent()) {
-            return CompletableFuture.completedFuture(device.get());
-        } else {
-            throw new DeviceNotFoundException("Device not found");
-        }
     });
 }
 
-// C# async/await
+// 调用异步方法
+deviceService.getDeviceAsync(1)
+    .thenAccept(device -> System.out.println(device.getName()));
+\`\`\`
+
+## C# async/await
+
+\`\`\`csharp
 public async Task<Device> GetDeviceAsync(int id)
 {
     var device = await _deviceRepository.FindAsync(id);
@@ -115,15 +133,6 @@ public async Task<Device> GetDeviceAsync(int id)
 }
 
 // 调用异步方法
-// Java
-deviceService.getDeviceAsync(1)
-    .thenAccept(device -> System.out.println(device.getName()))
-    .exceptionally(ex -> {
-        System.err.println("Error: " + ex.getMessage());
-        return null;
-    });
-
-// C#
 try 
 {
     var device = await deviceService.GetDeviceAsync(1);
@@ -132,279 +141,76 @@ try
 catch (DeviceNotFoundException ex)
 {
     Console.WriteLine($"Error: {ex.Message}");
-}`
-  },
-  {
-    id: 'controller-comparison',
-    title: 'Web API Controller 对比',
-    description: 'Spring Boot vs ASP.NET Core Controller',
-    language: 'csharp',
-    category: 'comparison',
-    code: `// Spring Boot Controller
-@RestController
-@RequestMapping("/api/devices")
-public class DeviceController {
-    
-    @Autowired
-    private DeviceService deviceService;
-    
-    @GetMapping("/{id}")
-    public ResponseEntity<Device> getDevice(@PathVariable Long id) {
-        Device device = deviceService.findById(id);
-        return device != null ? 
-            ResponseEntity.ok(device) : 
-            ResponseEntity.notFound().build();
-    }
-    
-    @PostMapping
-    public ResponseEntity<Device> createDevice(@RequestBody @Valid CreateDeviceRequest request) {
-        Device device = deviceService.create(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(device);
-    }
 }
+\`\`\`
 
-// ASP.NET Core Controller
-[ApiController]
-[Route("api/[controller]")]
-public class DevicesController : ControllerBase
-{
-    private readonly IDeviceService _deviceService;
-    
-    public DevicesController(IDeviceService deviceService)
-    {
-        _deviceService = deviceService;
-    }
-    
-    [HttpGet("{id}")]
-    public async Task<ActionResult<Device>> GetDevice(int id)
-    {
-        var device = await _deviceService.GetByIdAsync(id);
-        return device == null ? NotFound() : Ok(device);
-    }
-    
-    [HttpPost]
-    public async Task<ActionResult<Device>> CreateDevice([FromBody] CreateDeviceRequest request)
-    {
-        var device = await _deviceService.CreateAsync(request);
-        return CreatedAtAction(nameof(GetDevice), new { id = device.Id }, device);
-    }
-}`
-  },
-  {
-    id: 'ef-core-example',
-    title: 'Entity Framework Core 查询',
-    description: '复杂的数据库查询示例',
-    language: 'csharp',
-    category: 'csharp',
-    code: `public class DeviceService
-{
-    private readonly BMSDataContext _context;
-    
-    public DeviceService(BMSDataContext context)
-    {
-        _context = context;
-    }
-    
-    // 基础查询
-    public async Task<Device?> GetDeviceAsync(int id)
-    {
-        return await _context.Devices.FindAsync(id);
-    }
-    
-    // 复杂查询与投影
-    public async Task<List<DeviceStatsDto>> GetDeviceStatsAsync()
-    {
-        return await _context.Devices
-            .Where(d => d.IsActive)
-            .Select(d => new DeviceStatsDto
-            {
-                Id = d.Id,
-                Name = d.Name,
-                TotalReadings = d.AcurevReadings.Count(),
-                AverageVoltage = d.AcurevReadings.Average(r => r.Voltage),
-                LastReading = d.AcurevReadings
-                    .OrderByDescending(r => r.Timestamp)
-                    .Select(r => r.Timestamp)
-                    .FirstOrDefault()
-            })
-            .ToListAsync();
-    }
-    
-    // 关联查询
-    public async Task<List<Device>> GetDevicesWithBuildingAsync(string buildingName)
-    {
-        return await _context.Devices
-            .Include(d => d.Building)
-            .Include(d => d.AcurevReadings.Take(10))
-            .Where(d => d.Building.Name == buildingName)
-            .ToListAsync();
-    }
-    
-    // 分页查询
-    public async Task<PagedResult<Device>> GetDevicesPagedAsync(int page, int pageSize)
-    {
-        var totalCount = await _context.Devices.CountAsync();
-        
-        var devices = await _context.Devices
-            .OrderBy(d => d.Name)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .ToListAsync();
-            
-        return new PagedResult<Device>
-        {
-            Items = devices,
-            TotalCount = totalCount,
-            PageNumber = page,
-            PageSize = pageSize,
-            TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize)
-        };
-    }
-    
-    // 批量操作
-    public async Task UpdateDeviceStatusAsync(List<int> deviceIds, bool isActive)
-    {
-        await _context.Devices
-            .Where(d => deviceIds.Contains(d.Id))
-            .ExecuteUpdateAsync(d => d.SetProperty(p => p.IsActive, isActive));
-    }
-}`
-  },
-  {
-    id: 'testing-example',
-    title: 'xUnit 测试示例',
-    description: '单元测试和集成测试的实际例子',
-    language: 'csharp',
-    category: 'csharp',
-    code: `public class DeviceServiceTests
-{
-    private readonly Mock<IGenericRepository<Device>> _mockRepository;
-    private readonly Mock<ILogger<DeviceService>> _mockLogger;
-    private readonly DeviceService _service;
-
-    public DeviceServiceTests()
-    {
-        _mockRepository = new Mock<IGenericRepository<Device>>();
-        _mockLogger = new Mock<ILogger<DeviceService>>();
-        _service = new DeviceService(_mockRepository.Object, _mockLogger.Object);
-    }
-
-    [Fact]
-    public async Task GetDeviceAsync_WithValidId_ReturnsDevice()
-    {
-        // Arrange
-        var deviceId = 1;
-        var expectedDevice = new Device 
-        { 
-            Id = deviceId, 
-            Name = "Test Device",
-            IsActive = true
-        };
-
-        _mockRepository
-            .Setup(r => r.GetByIdAsync(deviceId))
-            .ReturnsAsync(expectedDevice);
-
-        // Act
-        var result = await _service.GetDeviceAsync(deviceId);
-
-        // Assert
-        Assert.NotNull(result);
-        Assert.Equal(deviceId, result.Id);
-        Assert.Equal("Test Device", result.Name);
-        Assert.True(result.IsActive);
-    }
-
-    [Fact]
-    public async Task GetDeviceAsync_WithInvalidId_ThrowsException()
-    {
-        // Arrange
-        var deviceId = 999;
-        _mockRepository
-            .Setup(r => r.GetByIdAsync(deviceId))
-            .ReturnsAsync((Device?)null);
-
-        // Act & Assert
-        await Assert.ThrowsAsync<DeviceNotFoundException>(
-            () => _service.GetDeviceAsync(deviceId));
-    }
-
-    [Theory]
-    [InlineData(true, "在线")]
-    [InlineData(false, "离线")]
-    public void GetDeviceStatus_ReturnsCorrectStatus(bool isActive, string expectedStatus)
-    {
-        // Arrange
-        var device = new Device { IsActive = isActive };
-
-        // Act
-        var status = device.Status;
-
-        // Assert
-        Assert.Equal(expectedStatus, status);
-    }
-}
-
-// 集成测试示例
-public class DeviceControllerIntegrationTests : IClassFixture<WebApplicationFactory<Program>>
-{
-    private readonly WebApplicationFactory<Program> _factory;
-    private readonly HttpClient _client;
-
-    public DeviceControllerIntegrationTests(WebApplicationFactory<Program> factory)
-    {
-        _factory = factory;
-        _client = _factory.CreateClient();
-    }
-
-    [Fact]
-    public async Task GetDevices_ReturnsSuccessStatusCode()
-    {
-        // Act
-        var response = await _client.GetAsync("/api/devices");
-
-        // Assert
-        response.EnsureSuccessStatusCode();
-        
-        var content = await response.Content.ReadAsStringAsync();
-        var devices = JsonSerializer.Deserialize<List<Device>>(content);
-        
-        Assert.NotNull(devices);
-    }
-}`
+**C# 优势:**
+- 语法更简洁，接近同步代码
+- 异常处理更直观
+- 编译器自动生成状态机`
   }
 ]
 
 export default function CodeExamples() {
-  const [selectedCategory, setSelectedCategory] = useState<string>('all')
+  const [selectedCategory, setSelectedCategory] = useState('all')
   const [copiedId, setCopiedId] = useState<string | null>(null)
 
-  const filteredExamples = codeExamples.filter(example => 
-    selectedCategory === 'all' || example.category === selectedCategory
-  )
+  const filteredExamples = selectedCategory === 'all' 
+    ? codeExamples 
+    : codeExamples.filter(example => example.category === selectedCategory)
 
-  const copyToClipboard = async (code: string, id: string) => {
+  const copyToClipboard = async (text: string, id: string) => {
     try {
-      await navigator.clipboard.writeText(code)
+      await navigator.clipboard.writeText(text)
       setCopiedId(id)
       setTimeout(() => setCopiedId(null), 2000)
     } catch (err) {
-      console.error('Failed to copy code:', err)
+      console.error('复制失败:', err)
+    }
+  }
+
+  // 自定义markdown组件
+  const MarkdownComponents = {
+    code({node, inline, className, children, ...props}: any) {
+      const match = /language-(\w+)/.exec(className || '')
+      return !inline && match ? (
+        <SyntaxHighlighter
+          style={oneDark}
+          language={match[1]}
+          PreTag="div"
+          customStyle={{
+            margin: '1rem 0',
+            borderRadius: '0.5rem',
+            fontSize: '0.875rem',
+            lineHeight: '1.5'
+          }}
+          showLineNumbers={true}
+          wrapLines={true}
+          {...props}
+        >
+          {String(children).replace(/\n$/, '')}
+        </SyntaxHighlighter>
+      ) : (
+        <code className={className} {...props}>
+          {children}
+        </code>
+      )
     }
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
-      <div className="mb-8">
-        <h2 className="text-3xl font-bold text-secondary-900 mb-4">
+    <div className="py-12 bg-secondary-50" id="examples">
+      {/* 标题区域 */}
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mb-8">
+        <h2 className="text-3xl font-bold text-center text-secondary-900 mb-4">
           代码示例库
         </h2>
-        <p className="text-lg text-secondary-600 mb-6">
+        <p className="text-lg text-secondary-600 mb-6 text-center">
           Java 与 C# 的实际代码对比，以及 .NET 开发的最佳实践
         </p>
 
         {/* 分类筛选 */}
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 justify-center">
           {[
             { key: 'all', label: '全部示例' },
             { key: 'comparison', label: 'Java vs C#' },
@@ -426,9 +232,9 @@ export default function CodeExamples() {
       </div>
 
       {/* 代码示例列表 */}
-      <div className="space-y-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
         {filteredExamples.map((example) => (
-          <div key={example.id} className="bg-white rounded-lg border border-secondary-200 overflow-hidden">
+          <div key={example.id} className="bg-white rounded-lg border border-secondary-200 overflow-hidden shadow-sm">
             {/* 标题区域 */}
             <div className="p-6 border-b border-secondary-200">
               <div className="flex items-start justify-between">
@@ -451,7 +257,7 @@ export default function CodeExamples() {
                   </p>
                 </div>
                 <button
-                  onClick={() => copyToClipboard(example.code, example.id)}
+                  onClick={() => copyToClipboard(example.content, example.id)}
                   className="flex items-center gap-2 px-3 py-2 bg-secondary-100 hover:bg-secondary-200 rounded-lg transition-colors ml-4"
                 >
                   {copiedId === example.id ? (
@@ -469,22 +275,14 @@ export default function CodeExamples() {
               </div>
             </div>
 
-            {/* 代码区域 */}
-            <div className="relative">
-              <SyntaxHighlighter
-                language={example.language === 'csharp' ? 'csharp' : example.language}
-                style={oneDark}
-                customStyle={{
-                  margin: 0,
-                  borderRadius: '0.5rem',
-                  fontSize: '0.875rem',
-                  lineHeight: '1.5'
-                }}
-                showLineNumbers={true}
-                wrapLines={true}
+            {/* Markdown内容区域 */}
+            <div className="p-6 prose prose-lg max-w-none prose-headings:text-secondary-900 prose-p:text-secondary-700 prose-strong:text-secondary-900">
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                components={MarkdownComponents}
               >
-                {example.code}
-              </SyntaxHighlighter>
+                {example.content}
+              </ReactMarkdown>
             </div>
           </div>
         ))}
